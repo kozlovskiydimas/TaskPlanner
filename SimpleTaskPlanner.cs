@@ -1,58 +1,43 @@
-﻿using Kozlovskiy.TaskPlanner.Domain.Models;
+﻿using System;
 using Kozlovskiy.TaskPlanner.Domain.Models;
-using System;
 using System.Linq;
-
-
+using Kozlovskiy.TaskPlanner.DataAccess.Abstractions;
 
 namespace Kozlovskiy.TaskPlanner.Domain.Logic
-
 {
-
     public class SimpleTaskPlanner
-
     {
+        private readonly IWorkItemsRepository _repository;
 
-        public Workitem[] CreatePlan(Workitem[] items)
-
+        public SimpleTaskPlanner(IWorkItemsRepository repository)
         {
-
-            var itemsAsList = items.ToList();
-
-            itemsAsList.Sort(CompareWorkItems);
-
-            return itemsAsList.ToArray();
-
+            _repository = repository;
         }
 
-        private static int CompareWorkItems(Workitem firstItem, Workitem secondItem)
-
+        public WorkItem[] CreatePlan()
         {
+            WorkItem[] allItems = _repository.GetAll();
 
+            var relevantItems = allItems
+                .Where(item => !item.IsCompleted)
+                .ToList();
+
+            relevantItems.Sort(CompareWorkItems);
+
+            return relevantItems.ToArray();
+        }
+
+        private static int CompareWorkItems(WorkItem firstItem, WorkItem secondItem)
+        {
             int priorityComparison = secondItem.priority.CompareTo(firstItem.priority);
-
             if (priorityComparison != 0)
-
                 return priorityComparison;
 
-
-
             int dueDateComparison = firstItem.DueDate.CompareTo(secondItem.DueDate);
-
             if (dueDateComparison != 0)
-
                 return dueDateComparison;
 
-
-
             return string.Compare(firstItem.Title, secondItem.Title, StringComparison.OrdinalIgnoreCase);
-
         }
-
-
-
-
-
     }
-
 }
